@@ -1,192 +1,176 @@
-# Unofficial Stremio PS5 Port
+# Unofficial Stremio PS4 Port
 
-[![Support me on Ko-fi](https://img.shields.io/badge/Ko--fi-Support_this_project-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/sp9nky)
+A native Stremio client for jailbroken PlayStation 4 consoles, based on [`Sp9nky/unofficial-stremio-ps5-port`](https://github.com/Sp9nky/unofficial-stremio-ps5-port) and adapted to OpenOrbis/PacBrew.
 
-> [!IMPORTANT]
-> **Since version 0.2.0, no Stremio streaming server is needed.**
-> <ins>**The app streams movies and TV shows directly on the console**</ins>:
-> torrents are downloaded by the app's own built-in torrent engine, and
-> direct links (e.g. debrid services) play straight from their source.
+> **Unofficial.** This project is not affiliated with, endorsed by, or supported by Stremio or Sony Interactive Entertainment. No Sony SDK, keys, firmware files, or proprietary Sony code are included.
 
-A Stremio client for jailbroken PlayStation 5 consoles, running as a native
-app on the home screen: browse your catalogs and library, pick a stream, and
-watch it, all with the DualSense.
+## Current status
 
-> **Unofficial.** This project is not affiliated with, endorsed by or
-> supported by Stremio, or by Sony Interactive Entertainment. It has no
-> connection with either. "Stremio" and its logo are trademarks of their
-> owner; "PlayStation", "PS5" and "DualSense" are trademarks of Sony
-> Interactive Entertainment Inc. No Sony code, SDK, keys or firmware files
-> are included.
+Tested on a physical PS4:
 
-## What's new in 0.3.1
+- installs and boots as a native `.pkg`;
+- Stremio UI starts successfully;
+- RmlUi and the bundled Noto fonts render correctly;
+- DualShock 4 input works through `ScePad`;
+- network initialization through `SceNet` / `SceNetCtl` works;
+- libcurl HTTPS initializes with the bundled CA file;
+- addons load at startup;
+- persistent logs are written to `/data/stremio/log.txt`.
 
-- **Arabic subtitles fixed**: they showed as white boxes; they now show in
-  an Arabic font, right to left, with joined letters.
+The PS4 build intentionally uses SDL's **software renderer**. OpenOrbis' `opengles2` SDL renderer produced white quads, broken glyphs and stray geometry with this RmlUi backend on real hardware; the software renderer fixed the UI.
 
-## What's new in 0.3.0
+### Still in progress
 
-Fewer buffering stops:
-
-- **Long read-ahead on the console's storage**: the app now uses up to
-  16 GB of the PS5's storage. Built-in torrents keep a 6 GB cache and
-  download up to 3 GB (about a quarter of an hour of 4K) ahead of what
-  you're watching; streams from a streaming server or a direct link keep up
-  to 6 GB ahead.
-- **Six connections for streaming-server streams** too (before, only direct
-  links): one connection from a server measured 3-6 MB/s, six about 8 MB/s.
-- If a source is slower than the video itself (a torrent with few seeders),
-  it can still stop: pick a stream with more seeders or a smaller file.
-
-## What's new in 0.2.0
-
-- **Streams directly on the console**: a built-in torrent engine (trackers,
-  DHT, peer exchange) downloads just ahead of what you're watching, into a
-  rolling 1 GB cache, and bans peers that send bad data.
-- **Hardware video decoding**: H.264, HEVC (8 and 10-bit) and VP9 up to 4K
-  decode on the PS5's own video hardware; other formats fall back to
-  software decoding.
-- **HDR10 tone mapping**: 4K HDR titles are converted to the TV's normal
-  range with correct colours.
-- **Faster direct links**: big files are downloaded over several
-  connections at once.
-- **Smarter buffering**: the buffer adapts to the video's bitrate and to how
-  well the download keeps up, so playback stops less.
+The full app currently reports `libSceVideodec2` unavailable on the tested console, so hardware video playback is still work in progress. Playback, torrent streaming, seeking, subtitles, audio tracks and the system keyboard need additional real-hardware validation before this port should be considered complete.
 
 ## Features
 
-- **Sign in** with your Stremio account (QR code / link code); your addons
-  and library sync from your account.
-- **Board, Discover, Library, Addons, Settings** pages styled after Stremio 5,
-  with poster art, previews and smooth scrolling.
-- **Search** with the PS5's on-screen keyboard.
-- **Detail pages** with seasons and episodes; streams grouped by resolution
-  (4K, 1080p, 720p, ...) before you pick one.
-- **Player** (FFmpeg, hardware decoding) with subtitles (from addons), audio
-  track selection, seeking, and resume (Continue Watching).
-- **Torrent statistics** (peers, speed, progress) while a torrent starts.
-- **One native app**: no launcher, no payload sender and no server needed.
+The application is based on the PS5 port and includes its native Stremio UI and core client functionality:
+
+- Board, Discover, Library, Addons and Settings pages;
+- Stremio account/login support;
+- addon and catalog APIs;
+- built-in torrent engine;
+- direct HTTP/HTTPS stream support;
+- FFmpeg player architecture;
+- subtitles, audio track selection, seeking and resume logic;
+- PS4-native DualShock 4 input;
+- PS4 system keyboard integration;
+- PS4 network/runtime layer;
+- experimental PS4 `libSceVideodec2` H.264 backend.
 
 ## Requirements
 
-- A jailbroken PS5 that can run homebrew titles, with
-  [ShadowMountPlus](https://github.com/drakmor/ShadowMountPlus) (or another
-  tool that mounts `.ffpfsc` images) and fake-signed app support (e.g.
-  [kstuff](https://github.com/EchoStretch/kstuff) /
-  [etaHEN](https://github.com/etaHEN/etaHEN)).
-  Developed and tested on firmware **11.60**.
+- Jailbroken PS4 capable of installing/running homebrew PKGs.
+- x86_64 Linux machine for building.
+- Internet connection during the build.
+
+The build script is tested on **CachyOS / Arch Linux**. It also contains setup support for Ubuntu/Debian.
 
 ## Install
 
-1. Download `PPSA77711.ffpfsc` from the [Releases](../../releases) page.
-2. Copy it to `/data/homebrew/` on the console (FTP, PS5 Upload, ...).
-3. ShadowMountPlus registers it: start **Stremio** from the home screen.
-4. In **Settings**, sign in to your Stremio account.
+After building, install:
 
-To update, close Stremio first, delete the old `PPSA77711.ffpfsc`, wait a few
-seconds, then copy the new one. (If the image is replaced while the app is
-running, the console keeps the old icon and backgrounds.)
+```text
+dist/Stremio-PS4-0.5.0.pkg
+```
 
-The app keeps its settings, artwork cache, read-ahead caches and log in its
-own storage (`/download0/stremio`, up to 16 GB).
+using the normal homebrew package installer on the PS4.
+
+Application data and logs are stored under:
+
+```text
+/data/stremio/
+```
+
+The main runtime log is:
+
+```text
+/data/stremio/log.txt
+```
 
 ## Controls
 
 | Where | Button | Action |
-| --- | --- | --- |
+|---|---|---|
 | Everywhere | ✕ / ○ | select / back |
-| | △, R3, Options | search |
-| | L1 / R1 | previous / next page |
-| | L2 / R2 | scroll a page up / down |
-| | Touchpad | open / close the menu |
-| | L3 | back to the Board |
+| Everywhere | △ / R3 / Options | search |
+| Everywhere | L1 / R1 | previous / next page |
+| Everywhere | L2 / R2 | page up / down |
+| Everywhere | Touchpad | open / close menu |
+| Everywhere | L3 | back to Board |
 | Player | ✕ | pause / play |
-| | D-pad left / right | seek 10 s |
-| | L1 / R1 | seek 1 min |
-| | □ / △ | subtitles / audio |
-| | Options | track menu |
-| | ○ | stop |
+| Player | D-pad left / right | seek 10 s |
+| Player | L1 / R1 | seek 1 min |
+| Player | □ / △ | subtitles / audio |
+| Player | Options | track menu |
+| Player | ○ | stop |
 
 ## Building
 
-Builds run on Linux or WSL (Ubuntu 24.04 tested):
+Builds run on Linux. From the repository root:
 
 ```bash
 ./build.sh
 ```
 
-The script installs what it needs (clang 18, the
-[ps5-payload-sdk](https://github.com/ps5-payload-dev/sdk) with its prebuilt
-libraries, and
-[ps5-native-app-boilerplate](https://github.com/blackbearreloaded/ps5-native-app-boilerplate)
-for the PS5 tooling), then writes:
+That's it.
 
-- `dist/PPSA77711.ffpfsc`: the app as one image file, for `/data/homebrew/`
-- `dist/PPSA77711/`: the same as a folder (if you copy the folder instead,
-  make sure `eboot.bin` keeps its execute permission)
+The script automatically:
 
-`./build.sh desktop` builds a Linux version of the UI for development.
+1. installs the host build dependencies;
+2. installs OpenOrbis and the required PacBrew PS4 portlibs;
+3. downloads the pinned upstream Stremio PS5 source;
+4. applies the PS4-specific runtime and compatibility changes;
+5. downloads/builds RmlUi with the OpenOrbis toolchain;
+6. builds the PS4 ELF and FSELF;
+7. packages the application as a PS4 `.pkg`;
+8. writes the result to `dist/`.
 
-### How it works
+Expected output:
 
-Stremio is compiled with the payload SDK's compiler into a static library,
-linked with the full C++ runtime, and turned into a signed native
-`eboot.bin` by the boilerplate's converter (`native/build.sh`). A native
-title runs in a sandbox with a minimal C runtime, so `native/` adds what the
-libraries need there:
-
-- `heap.c`: the malloc heap in direct memory (a title's flexible memory is
-  only a few hundred MB), 32-byte aligned, leaving room for the video decoder;
-- `posix_fixes.c`: 8 MB thread stacks, `pipe()` as a socket pair;
-- `console_curl.c`: name lookup through the console's resolver, socket fixes;
-- `ps5_modules.c`: loads the on-screen keyboard module before first use;
-- `stubs/`: link stubs for system modules the SDK has none for (the video
-  decoder).
-
-`native/check_imports.py` lists any system function that would resolve to a
-module the console doesn't load into an app.
-
-### Project layout
-
+```text
+dist/Stremio-PS4-0.5.0.pkg
+dist/SHA256SUMS
+dist/build.log
+dist/compiler.log
 ```
-src/          the app (C++17, SDL2, RmlUi, FFmpeg, libcurl)
-src/torrent/  the built-in torrent engine and the player's torrent input
-native/       native PS5 build: link script, runtime fixes, build and pack scripts
-app/          what the console reads: UI (RmlUi documents and styles), icons,
-              fonts, certificates, home-screen icon and backgrounds,
-              licenses/ (license texts shipped inside the app)
-tools/        make_icons.sh (UI icons from stremio-icons), make_dds.ps1 (backgrounds)
+
+To remove generated files:
+
+```bash
+./build.sh clean
 ```
+
+### Upstream revision
+
+Builds are currently pinned to:
+
+```text
+Sp9nky/unofficial-stremio-ps5-port
+89c0e6227cfb6549cc6e144a0a77fa852b8e316c
+```
+
+Pinning the source keeps the PS4 patches reproducible instead of silently applying them to an incompatible upstream revision.
+
+## How it works
+
+The PS4 port keeps the upstream C++17 application, RmlUi interface, FFmpeg player, networking logic and torrent engine. The build replaces/adds the platform-specific pieces needed by OpenOrbis:
+
+- PS4 network initialization and net pool;
+- DualShock 4 input through `ScePad`;
+- CommonDialog / IME keyboard integration;
+- PS4-safe process shutdown;
+- `__cxa_thread_atexit_impl` for OpenOrbis libc++abi;
+- OpenOrbis math/FFmpeg compatibility fixes;
+- PS4 packaging and FSELF generation;
+- experimental `libSceVideodec2` backend;
+- SDL software rendering for the RmlUi interface.
+
+A few host/toolchain compatibility fixes are handled by the build automatically, including Arch's `libxml2-legacy`, old PacBrew `libcurl.pc` packages, OpenSSL compatibility for `PkgTool.Core`, and removal of the unsupported linker `-pthread` flag while retaining `libpthread.a`.
+
+## Project layout
+
+```text
+build.sh    one-command Linux build
+src/        PS4-specific runtime/input/video source
+native/     OpenOrbis build, packaging and compatibility layer
+.github/    CI build workflow
+```
+
+The upstream application source is downloaded into `.build/` during compilation and is not committed as a second copy in this repository.
 
 ## Status and known limitations
 
-- The PS5 doesn't let the app accept incoming connections, so torrents only
-  use peers the app can connect to; torrents with few reachable seeders start
-  slowly or stop to buffer.
-- Some formats (AV1, 4K HEVC coded in tiles) decode in software and can
-  stutter at 4K.
-- HDR is shown tone mapped, not as HDR; Dolby Vision plays its HDR10 layer.
-- A Stremio streaming server is optional: set one in Settings only if you
-  want server transcoding or prefer it for torrents.
+- UI rendering is verified on real PS4 hardware using SDL software rendering.
+- Hardware video decoding is not yet working in the full application on the tested console.
+- The IME keyboard is initialized lazily because initializing CommonDialog during startup caused `CE-34878-0` on real hardware.
+- This is an experimental homebrew port and should be expected to contain bugs.
 
 ## Credits and licenses
 
-Licensed under the [GNU GPL v3.0](LICENSE). This port builds on
-[ps5-native-app-boilerplate](https://github.com/blackbearreloaded/ps5-native-app-boilerplate)
-(BlackBearReloaded, with tooling derived from
-[SharpProspero](https://github.com/SvenGDK/SharpProspero) by SvenGDK),
-the [ps5-payload-sdk](https://github.com/ps5-payload-dev/sdk) and its
-[PacBrew](https://github.com/ps5-payload-dev/pacbrew-repo) libraries (SDL2,
-RmlUi, FFmpeg, libcurl, OpenSSL and more), techniques from the
-[Kodi port for PS5](https://github.com/VivaLaVent/kodi-ps5), hardware video
-decoding ported from [Nuvio PS5](https://github.com/theghostonline/Nuvio-PS5)
-(Husam Osman), the [dht](https://github.com/jech/dht) library (Juliusz
-Chroboczek), [MkPFS](https://github.com/PSBrew/MkPFS) for packaging,
-[Stremio's icons](https://github.com/Stremio/stremio-icons) and
-[stremio-video](https://github.com/Stremio/stremio-video), and the logo from
-[dashboard-icons](https://github.com/homarr-labs/dashboard-icons). See
-[THIRD_PARTY.md](THIRD_PARTY.md) for every component and its license.
+Licensed under the **GNU GPL v3.0**, matching the upstream project.
 
-## Note
+This port builds on the work in [`Sp9nky/unofficial-stremio-ps5-port`](https://github.com/Sp9nky/unofficial-stremio-ps5-port), OpenOrbis, PacBrew, SDL2, RmlUi, FFmpeg, libcurl, FreeType, FriBidi, WebP and the other components documented in [`THIRD_PARTY.md`](THIRD_PARTY.md).
 
-This project is vibe coded: it was built with the help of AI.
+See [`LICENSE`](LICENSE) for the full GPLv3 text.

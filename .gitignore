@@ -1,17 +1,11 @@
-# Build output (build.sh writes dist/; release files go to GitHub Releases)
+.build/
 dist/
-dist-native/
-build/
-*.ffpfsc
-*.zip
-
-# Downloaded on first use by tools/make_dds.ps1
-tools/texconv.exe
-
-# Editors and OS
-.vscode/
-.idea/
-*.swp
+build-ps4/
+.ps4-deps/
+.ps4-pkgconfig/
+*.pkg
+*.self
+*.oelf
+*.elf
+*.log
 .DS_Store
-Thumbs.db
-desktop.ini
